@@ -1,0 +1,13 @@
+services:
+  chc-wetter:
+    build: .
+    restart: unless-stopped
+    networks:
+      - web
+    labels:
+      caddy: chc.wetter.hackerwerkstatt.de
+      caddy.reverse_proxy: "{{upstreams 80}}"
+
+networks:
+  web:
+    external: true

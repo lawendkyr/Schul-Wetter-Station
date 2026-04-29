@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wetter – HafenCity Hamburg</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:     #0d1b2a;
+      --steel:   #1e3448;
+      --harbor:  #243d55;
+      --rust:    #c94b1f;
+      --amber:   #e8a020;
+      --fog:     #8fa8bf;
+      --mist:    #c5d8e8;
+      --white:   #f0f4f8;
+      --card-bg: rgba(30, 52, 72, 0.7);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--ink);
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 0%, #1a3a5c 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 100%, #0d2233 0%, transparent 60%),
+        linear-gradient(160deg, #0d1b2a 0%, #162535 50%, #0a1520 100%);
+    }
+    .bg::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(143,168,191,.06) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(143,168,191,.06) 40px);
+    }
+
+    .waves {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 1; height: 120px; overflow: hidden;
+    }
+    .wave {
+      position: absolute; bottom: 0; left: -50%;
+      width: 200%; height: 80px;
+      border-radius: 50% 50% 0 0;
+      opacity: .12;
+    }
+    .wave1 { background: var(--fog); animation: swell 8s ease-in-out infinite; }
+    .wave2 { background: var(--mist); height: 55px; animation: swell 11s ease-in-out infinite reverse; opacity: .07; }
+    @keyframes swell {
+      0%,100% { transform: translateX(0) scaleY(1); }
+      50%      { transform: translateX(3%) scaleY(1.08); }
+    }
+
+    .page {
+      position: relative; z-index: 2;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px 140px;
+    }
+
+    header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 48px;
+      border-bottom: 1px solid rgba(143,168,191,.2);
+      padding-bottom: 20px;
+    }
+    .logo-area h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.4rem, 7vw, 4rem);
+      letter-spacing: .06em;
+      line-height: 1;
+      color: var(--white);
+    }
+    .logo-area h1 span { color: var(--amber); }
+    .logo-area .sub {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .2em;
+      color: var(--fog);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .updated {
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem;
+      color: var(--fog);
+      text-align: right;
+    }
+    .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+           background: #3ddc84; margin-right: 6px;
+           animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .error-box {
+      background: rgba(201,75,31,.15);
+      border: 1px solid var(--rust);
+      border-radius: 12px;
+      padding: 24px;
+      font-family: 'DM Mono', monospace;
+      font-size: .85rem;
+      color: #f5a080;
+    }
+
+    .current-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(143,168,191,.15);
+      border-radius: 20px;
+      padding: 36px 40px;
+      margin-bottom: 32px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .current-card::before {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(232,160,32,.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .temp-main {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 14vw, 8rem);
+      line-height: 1;
+      color: var(--white);
+      letter-spacing: -.02em;
+    }
+    .temp-main sup {
+      font-size: 2.5rem;
+      vertical-align: top;
+      margin-top: .8rem;
+      color: var(--amber);
+    }
+    .condition-label {
+      font-size: 1.1rem;
+      color: var(--mist);
+      margin-top: 4px;
+      font-weight: 300;
+    }
+    .feels {
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem;
+      color: var(--fog);
+      margin-top: 8px;
+      letter-spacing: .05em;
+    }
+
+    .weather-emoji { font-size: 5rem; line-height: 1; text-align: right; }
+
+    .stats {
+      grid-column: 1 / -1;
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .stat-chip {
+      background: rgba(143,168,191,.1);
+      border: 1px solid rgba(143,168,191,.18);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem;
+      color: var(--mist);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .stat-chip .icon { font-size: 1rem; }
+    .stat-chip strong { color: var(--white); font-weight: 500; }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: var(--fog);
+      margin-bottom: 16px;
+    }
+
+    .forecast-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+      gap: 10px;
+    }
+    .fc-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(143,168,191,.12);
+      border-radius: 14px;
+      padding: 18px 12px;
+      text-align: center;
+      transition: border-color .2s, transform .2s;
+      cursor: default;
+    }
+    .fc-card:first-child {
+      border-color: rgba(232,160,32,.35);
+      background: rgba(232,160,32,.07);
+    }
+    .fc-card:hover { border-color: rgba(143,168,191,.35); transform: translateY(-2px); }
+    .fc-day {
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .12em;
+      color: var(--fog);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .fc-emoji { font-size: 1.9rem; margin-bottom: 10px; display: block; }
+    .fc-temps { display: flex; justify-content: center; gap: 6px; align-items: baseline; }
+    .fc-max { font-size: 1.05rem; font-weight: 600; color: var(--white); }
+    .fc-min { font-size: .8rem; color: var(--fog); }
+    .fc-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: .62rem;
+      color: var(--fog);
+      margin-top: 8px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(143,168,191,.2) 30%, rgba(143,168,191,.2) 70%, transparent);
+      margin: 32px 0;
+    }
+
+    footer {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 3;
+      padding: 14px 24px;
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(13,27,42,.85);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(143,168,191,.1);
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      color: var(--fog);
+    }
+    footer a { color: var(--fog); text-decoration: none; }
+    footer a:hover { color: var(--mist); }
+
+    @media (max-width: 480px) {
+      .page { padding: 28px 16px 100px; }
+      header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .current-card { padding: 24px 20px; }
+      .weather-emoji { font-size: 3.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="waves">
+  <div class="wave wave1"></div>
+  <div class="wave wave2"></div>
+</div>
+
+<div class="page">
+
+  <header>
+    <div class="logo-area">
+      <h1>HAFEN<span>WETTER</span></h1>
+      <p class="sub">{{ location }}</p>
+    </div>
+    {% if current %}
+    <div class="updated">
+      <span class="dot"></span>Live · {{ current.updated }}
+    </div>
+    {% endif %}
+  </header>
+
+  {% if error %}
+  <div class="error-box">
+    ⚠ Wetterdaten konnten nicht geladen werden.<br>
+    <small>{{ error }}</small>
+  </div>
+
+  {% elif current %}
+  <div class="current-card">
+    <div>
+      <div class="temp-main">{{ current.temp }}<sup>°C</sup></div>
+      <div class="condition-label">{{ current.desc }}</div>
+      <div class="feels">Gefühlt {{ current.feels_like }}°C</div>
+    </div>
+    <div class="weather-emoji">{{ current.emoji }}</div>
+
+    <div class="stats">
+      <div class="stat-chip"><span class="icon">💨</span>Wind <strong>{{ current.wind }} km/h {{ current.wind_dir }}</strong></div>
+      <div class="stat-chip"><span class="icon">💧</span>Luftfeuchtigkeit <strong>{{ current.humidity }}%</strong></div>
+      <div class="stat-chip"><span class="icon">🌧️</span>Niederschlag <strong>{{ current.precip }} mm</strong></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <p class="section-label">7-Tage-Vorschau</p>
+  <div class="forecast-grid">
+    {% for day in forecast %}
+    <div class="fc-card">
+      <div class="fc-day">{{ day.label }}</div>
+      <span class="fc-emoji">{{ day.emoji }}</span>
+      <div class="fc-temps">
+        <span class="fc-max">{{ day.max }}°</span>
+        <span class="fc-min">{{ day.min }}°</span>
+      </div>
+      <div class="fc-meta">
+        <span>💨 {{ day.wind }} km/h</span>
+        <span>🌧 {{ day.precip }} mm</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+
+<footer>
+  <span>📍 Am Hannoverschen Bahnhof 21 · 20457 Hamburg</span>
+  <span>Quelle: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></span>
+</footer>
+
+</body>
+</html>
