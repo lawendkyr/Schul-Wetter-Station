@@ -5,7 +5,6 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Hamburg HafenCity – Am Hannoverschen Bahnhof 21
 LAT = 53.5407
 LON = 10.0017
 LOCATION = "HafenCity, Hamburg"
@@ -37,26 +36,29 @@ WMO_CODES = {
     99: ("Starkes Gewitter mit Hagel", "⛈️"),
 }
 
-def get_weather():
-    url = (
-        f"https://api.open-meteo.com/v1/forecast"
-        f"?latitude={LAT}&longitude={LON}"
-        f"&current=temperature_2m,apparent_temperature,weathercode,"
-        f"windspeed_10m,winddirection_10m,relativehumidity_2m,precipitation"
-        f"&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max"
-        f"&timezone=Europe%2FBerlin"
-        f"&forecast_days=7"
-    )
+@app.route("/test")
+def test():
+    return "Flask läuft! ✅"
+
+@app.route("/")
+def index():
     try:
+        url = (
+            f"https://api.open-meteo.com/v1/forecast"
+            f"?latitude={LAT}&longitude={LON}"
+            f"&current=temperature_2m,apparent_temperature,weathercode,"
+            f"windspeed_10m,winddirection_10m,relativehumidity_2m,precipitation"
+            f"&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max"
+            f"&timezone=Europe%2FBerlin"
+            f"&forecast_days=7"
+        )
         with urllib.request.urlopen(url, timeout=8) as resp:
             data = json.loads(resp.read())
 
         cur = data["current"]
         daily = data["daily"]
-
         code = cur.get("weathercode", 0)
         desc, emoji = WMO_CODES.get(code, ("Unbekannt", "🌡️"))
-
         wind_dir = cur.get("winddirection_10m", 0)
         directions = ["N","NO","O","SO","S","SW","W","NW"]
         wind_label = directions[int((wind_dir + 22.5) / 45) % 8]
@@ -91,22 +93,10 @@ def get_weather():
                 "wind": round(daily["windspeed_10m_max"][i]),
             })
 
-        return current, forecast, None
+        return render_template("index.html", location=LOCATION, current=current, forecast=forecast, error=None)
+
     except Exception as e:
-        return None, None, str(e)
-
-
-@app.route("/")
-def index():
-    current, forecast, error = get_weather()
-    return render_template(
-        "index.html",
-        location=LOCATION,
-        current=current,
-        forecast=forecast,
-        error=error,
-    )
-
+        return f"<h1>Fehler:</h1><pre>{e}</pre>", 500
 
 if __name__ == "__main__":
     import os
