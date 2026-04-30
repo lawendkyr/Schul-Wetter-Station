@@ -1,16 +1,11 @@
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify
+from flask import Flask, render_template, jsonify, request
 import urllib.request
 import json
 import os
-import platform
 import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "hackerwerkstatt-secret")
-
-ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
-ADMIN_PASS = os.environ.get("ADMIN_PASS", "passwort123")
 
 DB_PATH = "/app/data/sensor.db"
 
@@ -35,7 +30,6 @@ WMO_CODES = {
     96: ("Gewitter mit Hagel", "⛈️"), 99: ("Starkes Gewitter mit Hagel", "⛈️"),
 }
 
-# ── Datenbank Setup ───────────────────────────────────
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
@@ -55,7 +49,6 @@ def init_db():
 
 init_db()
 
-# ── Wetter API ────────────────────────────────────────
 def get_weather():
     url = (
         f"https://api.open-meteo.com/v1/forecast"
@@ -103,25 +96,34 @@ def get_weather():
     except Exception as e:
         return None, None, str(e)
 
-# ── Hauptseite ────────────────────────────────────────
 @app.route("/")
 def index():
     current, forecast, error = get_weather()
+    sensor = None
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT * FROM sensor_data ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        conn.close()
+        if row:
+            sensor = dict(row)
+    except:
+        pass
     return render_template("index.html", location=config["location"],
-                           current=current, forecast=forecast, error=error)
+                           current=current, forecast=forecast,
+                           error=error, sensor=sensor)
 
-# ── Sensor API ────────────────────────────────────────
 @app.route("/api", methods=["POST"])
 def api_receive():
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"error": "Kein JSON erhalten"}), 400
-
     required = ["temperature", "humidity", "air_quality_raw", "air_quality", "uv_index"]
     for field in required:
         if field not in data:
             return jsonify({"error": f"Feld fehlt: {field}"}), 400
-
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.execute("""
@@ -154,68 +156,6 @@ def api_latest():
         return jsonify([dict(r) for r in rows]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# ── Login ─────────────────────────────────────────────
-@app.route("/admin/login", methods=["GET", "POST"])
-def admin_login():
-    error = None
-    if request.method == "POST":
-        if (request.form.get("username") == ADMIN_USER and
-                request.form.get("password") == ADMIN_PASS):
-            session["admin"] = True
-            return redirect(url_for("admin"))
-        error = "Falscher Benutzername oder Passwort"
-    return render_template("admin_login.html", error=error)
-
-@app.route("/admin/logout")
-def admin_logout():
-    session.pop("admin", None)
-    return redirect(url_for("admin_login"))
-
-# ── Admin Dashboard ───────────────────────────────────
-@app.route("/admin", methods=["GET", "POST"])
-def admin():
-    if not session.get("admin"):
-        return redirect(url_for("admin_login"))
-
-    message = None
-    if request.method == "POST":
-        try:
-            config["lat"] = float(request.form["lat"])
-            config["lon"] = float(request.form["lon"])
-            config["location"] = request.form["location"]
-            message = "✅ Einstellungen gespeichert!"
-        except Exception as e:
-            message = f"❌ Fehler: {e}"
-
-    try:
-        test_url = f"https://api.open-meteo.com/v1/forecast?latitude={config['lat']}&longitude={config['lon']}&current=temperature_2m"
-        with urllib.request.urlopen(test_url, timeout=5) as r:
-            api_status = "✅ Online" if r.status == 200 else "⚠️ Fehler"
-    except:
-        api_status = "❌ Nicht erreichbar"
-
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        count = conn.execute("SELECT COUNT(*) FROM sensor_data").fetchone()[0]
-        latest = conn.execute(
-            "SELECT * FROM sensor_data ORDER BY id DESC LIMIT 1"
-        ).fetchone()
-        conn.close()
-        db_info = {"eintraege": count, "letzter": latest[1] if latest else "—"}
-    except:
-        db_info = {"eintraege": "—", "letzter": "—"}
-
-    server_info = {
-        "python": platform.python_version(),
-        "system": platform.system() + " " + platform.release(),
-        "hostname": platform.node(),
-        "time": datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
-    }
-
-    return render_template("admin.html",
-        config=config, api_status=api_status,
-        server_info=server_info, message=message, db_info=db_info)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 80))
