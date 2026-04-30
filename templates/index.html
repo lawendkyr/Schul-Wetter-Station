@@ -115,43 +115,34 @@
       display: flex; align-items: center; gap: 8px;
     }
     .stat-chip strong { color: var(--white); font-weight: 500; }
-
-    /* ── Sensor Card ── */
     .sensor-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(61,220,132,.2);
-      border-radius: 20px;
-      padding: 28px 32px;
-      margin-bottom: 32px;
+      background: var(--card-bg); backdrop-filter: blur(16px);
+      border: 1px solid rgba(61,220,132,.2); border-radius: 20px;
+      padding: 28px 32px; margin-bottom: 32px;
     }
     .sensor-title {
-      font-family: 'DM Mono', monospace;
-      font-size: .68rem; letter-spacing: .2em;
-      text-transform: uppercase; color: #3ddc84;
-      margin-bottom: 20px;
+      font-family: 'DM Mono', monospace; font-size: .68rem;
+      letter-spacing: .2em; text-transform: uppercase; color: #3ddc84;
+      margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
     }
-    .sensor-title span { color: var(--fog); text-transform: none; letter-spacing: 0; }
+    .sensor-title span { color: var(--fog); text-transform: none; letter-spacing: 0; font-size: .7rem; }
     .sensor-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
     }
     .sensor-item {
-      background: rgba(61,220,132,.06);
-      border: 1px solid rgba(61,220,132,.15);
+      background: rgba(61,220,132,.06); border: 1px solid rgba(61,220,132,.15);
       border-radius: 14px; padding: 20px 16px; text-align: center;
+      transition: opacity .3s;
     }
+    .sensor-item.updating { opacity: .5; }
     .sensor-icon { font-size: 1.8rem; margin-bottom: 8px; }
     .sensor-value {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.6rem; color: var(--white); letter-spacing: .04em;
     }
     .sensor-label {
-      font-family: 'DM Mono', monospace;
-      font-size: .65rem; color: var(--fog); margin-top: 4px;
+      font-family: 'DM Mono', monospace; font-size: .65rem; color: var(--fog); margin-top: 4px;
     }
-
     .divider {
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(143,168,191,.2) 30%, rgba(143,168,191,.2) 70%, transparent);
@@ -159,8 +150,7 @@
     }
     .section-label {
       font-family: 'DM Mono', monospace; font-size: .68rem;
-      letter-spacing: .25em; text-transform: uppercase;
-      color: var(--fog); margin-bottom: 16px;
+      letter-spacing: .25em; text-transform: uppercase; color: var(--fog); margin-bottom: 16px;
     }
     .forecast-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 10px;
@@ -175,8 +165,7 @@
     .fc-card:hover { border-color: rgba(143,168,191,.35); transform: translateY(-2px); }
     .fc-day {
       font-family: 'DM Mono', monospace; font-size: .68rem;
-      letter-spacing: .12em; color: var(--fog);
-      text-transform: uppercase; margin-bottom: 10px;
+      letter-spacing: .12em; color: var(--fog); text-transform: uppercase; margin-bottom: 10px;
     }
     .fc-emoji { font-size: 1.9rem; margin-bottom: 10px; display: block; }
     .fc-temps { display: flex; justify-content: center; gap: 6px; align-items: baseline; }
@@ -240,33 +229,34 @@
     </div>
   </div>
 
-  {% if sensor %}
-  <div class="sensor-card">
-    <div class="sensor-title">📡 Live-Sensordaten · <span>{{ sensor.timestamp }}</span></div>
+  <div class="sensor-card" id="sensor-card">
+    <div class="sensor-title">
+      📡 Live-Sensordaten
+      <span id="sensor-timestamp">wird geladen…</span>
+    </div>
     <div class="sensor-grid">
-      <div class="sensor-item">
+      <div class="sensor-item" id="s-temp">
         <div class="sensor-icon">🌡️</div>
-        <div class="sensor-value">{{ sensor.temperature }}°C</div>
+        <div class="sensor-value" id="val-temp">—</div>
         <div class="sensor-label">Temperatur</div>
       </div>
-      <div class="sensor-item">
+      <div class="sensor-item" id="s-hum">
         <div class="sensor-icon">💧</div>
-        <div class="sensor-value">{{ sensor.humidity }}%</div>
+        <div class="sensor-value" id="val-humidity">—</div>
         <div class="sensor-label">Luftfeuchtigkeit</div>
       </div>
-      <div class="sensor-item">
+      <div class="sensor-item" id="s-air">
         <div class="sensor-icon">💨</div>
-        <div class="sensor-value">{{ sensor.air_quality }}</div>
-        <div class="sensor-label">Luftqualität ({{ sensor.air_quality_raw }})</div>
+        <div class="sensor-value" id="val-air">—</div>
+        <div class="sensor-label">Luftqualität (<span id="val-air-raw">—</span>)</div>
       </div>
-      <div class="sensor-item">
+      <div class="sensor-item" id="s-uv">
         <div class="sensor-icon">☀️</div>
-        <div class="sensor-value">{{ sensor.uv_index }}</div>
+        <div class="sensor-value" id="val-uv">—</div>
         <div class="sensor-label">UV-Index</div>
       </div>
     </div>
   </div>
-  {% endif %}
 
   <div class="divider"></div>
   <p class="section-label">7-Tage-Vorschau</p>
@@ -293,5 +283,36 @@
   <span>📍 Am Hannoverschen Bahnhof 21 · 20457 Hamburg</span>
   <span>Quelle: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></span>
 </footer>
+
+<script>
+  function updateSensor() {
+    const items = document.querySelectorAll('.sensor-item');
+    items.forEach(i => i.classList.add('updating'));
+
+    fetch('/api')
+      .then(r => r.json())
+      .then(data => {
+        if (!data || data.length === 0) return;
+        const s = data[0]; // neuester Eintrag
+
+        document.getElementById('val-temp').textContent     = s.temperature + '°C';
+        document.getElementById('val-humidity').textContent = s.humidity + '%';
+        document.getElementById('val-air').textContent      = s.air_quality;
+        document.getElementById('val-air-raw').textContent  = s.air_quality_raw;
+        document.getElementById('val-uv').textContent       = s.uv_index;
+        document.getElementById('sensor-timestamp').textContent = s.timestamp;
+
+        items.forEach(i => i.classList.remove('updating'));
+      })
+      .catch(() => {
+        items.forEach(i => i.classList.remove('updating'));
+      });
+  }
+
+  // Sofort laden, dann alle 10 Sekunden
+  updateSensor();
+  setInterval(updateSensor, 10000);
+</script>
+
 </body>
 </html>
