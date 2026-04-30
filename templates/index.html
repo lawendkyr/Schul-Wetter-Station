@@ -15,6 +15,7 @@
       --mist:    #c5d8e8;
       --white:   #f0f4f8;
       --card-bg: rgba(30, 52, 72, 0.7);
+      --green:   #3ddc84;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -44,8 +45,7 @@
     .wave {
       position: absolute; bottom: 0; left: -50%;
       width: 200%; height: 80px;
-      border-radius: 50% 50% 0 0;
-      opacity: .12;
+      border-radius: 50% 50% 0 0; opacity: .12;
     }
     .wave1 { background: var(--fog); animation: swell 8s ease-in-out infinite; }
     .wave2 { background: var(--mist); height: 55px; animation: swell 11s ease-in-out infinite reverse; opacity: .07; }
@@ -77,17 +77,43 @@
     }
     .updated { font-family: 'DM Mono', monospace; font-size: .68rem; color: var(--fog); text-align: right; }
     .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-           background: #3ddc84; margin-right: 6px; animation: pulse 2s ease-in-out infinite; }
+           background: var(--green); margin-right: 6px; animation: pulse 2s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-    .error-box {
-      background: rgba(201,75,31,.15); border: 1px solid var(--rust);
-      border-radius: 12px; padding: 24px;
-      font-family: 'DM Mono', monospace; font-size: .85rem; color: #f5a080;
+
+    /* ── Abschnitt Labels ── */
+    .section-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem; letter-spacing: .12em;
+      margin-bottom: 16px;
+      padding: 6px 18px 6px 12px;
+      border-radius: 8px;
     }
+    .section-badge.official {
+      color: var(--amber);
+      background: rgba(232,160,32,.08);
+      border: 1px solid rgba(232,160,32,.25);
+      text-shadow: 0 0 18px rgba(232,160,32,.6), 0 0 40px rgba(232,160,32,.3);
+      box-shadow: 0 0 20px rgba(232,160,32,.08);
+    }
+    .section-badge.sensor {
+      color: var(--green);
+      background: rgba(61,220,132,.08);
+      border: 1px solid rgba(61,220,132,.25);
+      text-shadow: 0 0 18px rgba(61,220,132,.7), 0 0 40px rgba(61,220,132,.3);
+      box-shadow: 0 0 20px rgba(61,220,132,.08);
+    }
+    .section-badge .badge-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .official .badge-dot { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse 2s ease-in-out infinite; }
+    .sensor .badge-dot   { background: var(--green);  box-shadow: 0 0 8px var(--green);  animation: pulse 2s ease-in-out infinite; }
+
+    /* ── Offizielle Wetterkarte ── */
     .current-card {
       background: var(--card-bg); backdrop-filter: blur(16px);
-      border: 1px solid rgba(143,168,191,.15); border-radius: 20px;
-      padding: 36px 40px; margin-bottom: 32px;
+      border: 1px solid rgba(232,160,32,.15); border-radius: 20px;
+      padding: 36px 40px; margin-bottom: 40px;
       display: grid; grid-template-columns: 1fr auto;
       gap: 24px; align-items: center;
       position: relative; overflow: hidden;
@@ -95,7 +121,7 @@
     .current-card::before {
       content: ''; position: absolute; top: -40px; right: -40px;
       width: 200px; height: 200px;
-      background: radial-gradient(circle, rgba(232,160,32,.12) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(232,160,32,.1) 0%, transparent 70%);
       pointer-events: none;
     }
     .temp-main {
@@ -115,17 +141,24 @@
       display: flex; align-items: center; gap: 8px;
     }
     .stat-chip strong { color: var(--white); font-weight: 500; }
+
+    /* ── Sensor Karte ── */
     .sensor-card {
       background: var(--card-bg); backdrop-filter: blur(16px);
-      border: 1px solid rgba(61,220,132,.2); border-radius: 20px;
+      border: 1px solid rgba(61,220,132,.15); border-radius: 20px;
       padding: 28px 32px; margin-bottom: 32px;
+      position: relative; overflow: hidden;
     }
-    .sensor-title {
+    .sensor-card::before {
+      content: ''; position: absolute; top: -40px; left: -40px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(61,220,132,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .sensor-ts {
       font-family: 'DM Mono', monospace; font-size: .68rem;
-      letter-spacing: .2em; text-transform: uppercase; color: #3ddc84;
-      margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;
+      color: var(--fog); margin-bottom: 20px;
     }
-    .sensor-title span { color: var(--fog); text-transform: none; letter-spacing: 0; font-size: .7rem; }
     .sensor-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
     }
@@ -134,7 +167,7 @@
       border-radius: 14px; padding: 20px 16px; text-align: center;
       transition: opacity .3s;
     }
-    .sensor-item.updating { opacity: .5; }
+    .sensor-item.updating { opacity: .4; }
     .sensor-icon { font-size: 1.8rem; margin-bottom: 8px; }
     .sensor-value {
       font-family: 'Bebas Neue', sans-serif;
@@ -143,12 +176,19 @@
     .sensor-label {
       font-family: 'DM Mono', monospace; font-size: .65rem; color: var(--fog); margin-top: 4px;
     }
+
+    .error-box {
+      background: rgba(201,75,31,.15); border: 1px solid var(--rust);
+      border-radius: 12px; padding: 24px;
+      font-family: 'DM Mono', monospace; font-size: .85rem; color: #f5a080;
+      margin-bottom: 32px;
+    }
     .divider {
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(143,168,191,.2) 30%, rgba(143,168,191,.2) 70%, transparent);
-      margin: 32px 0;
+      margin: 40px 0;
     }
-    .section-label {
+    .forecast-label {
       font-family: 'DM Mono', monospace; font-size: .68rem;
       letter-spacing: .25em; text-transform: uppercase; color: var(--fog); margin-bottom: 16px;
     }
@@ -212,9 +252,14 @@
   </header>
 
   {% if error %}
-  <div class="error-box">⚠ Wetterdaten konnten nicht geladen werden.<br><small>{{ error }}</small></div>
-
+  <div class="error-box">⚠ Offizielle Wetterdaten konnten nicht geladen werden.<br><small>{{ error }}</small></div>
   {% elif current %}
+
+  <!-- ── Offizielle Wetterdaten ── -->
+  <div class="section-badge official">
+    <span class="badge-dot"></span>
+    Offizielle Wetterdaten
+  </div>
   <div class="current-card">
     <div>
       <div class="temp-main">{{ current.temp }}<sup>°C</sup></div>
@@ -229,28 +274,32 @@
     </div>
   </div>
 
-  <div class="sensor-card" id="sensor-card">
-    <div class="sensor-title">
-      📡 Live-Sensordaten
-      <span id="sensor-timestamp">wird geladen…</span>
-    </div>
+  {% endif %}
+
+  <!-- ── CHC Sensor Daten ── -->
+  <div class="section-badge sensor">
+    <span class="badge-dot"></span>
+    Wetterbedingungen CHC
+  </div>
+  <div class="sensor-card">
+    <div class="sensor-ts">Letztes Update: <span id="sensor-timestamp">wird geladen…</span></div>
     <div class="sensor-grid">
-      <div class="sensor-item" id="s-temp">
+      <div class="sensor-item">
         <div class="sensor-icon">🌡️</div>
         <div class="sensor-value" id="val-temp">—</div>
         <div class="sensor-label">Temperatur</div>
       </div>
-      <div class="sensor-item" id="s-hum">
+      <div class="sensor-item">
         <div class="sensor-icon">💧</div>
         <div class="sensor-value" id="val-humidity">—</div>
         <div class="sensor-label">Luftfeuchtigkeit</div>
       </div>
-      <div class="sensor-item" id="s-air">
+      <div class="sensor-item">
         <div class="sensor-icon">💨</div>
         <div class="sensor-value" id="val-air">—</div>
         <div class="sensor-label">Luftqualität (<span id="val-air-raw">—</span>)</div>
       </div>
-      <div class="sensor-item" id="s-uv">
+      <div class="sensor-item">
         <div class="sensor-icon">☀️</div>
         <div class="sensor-value" id="val-uv">—</div>
         <div class="sensor-label">UV-Index</div>
@@ -258,8 +307,9 @@
     </div>
   </div>
 
+  {% if current %}
   <div class="divider"></div>
-  <p class="section-label">7-Tage-Vorschau</p>
+  <p class="forecast-label">7-Tage-Vorschau</p>
   <div class="forecast-grid">
     {% for day in forecast %}
     <div class="fc-card">
@@ -277,6 +327,7 @@
     {% endfor %}
   </div>
   {% endif %}
+
 </div>
 
 <footer>
@@ -286,30 +337,31 @@
 
 <script>
   function updateSensor() {
-    const items = document.querySelectorAll('.sensor-item');
-    items.forEach(i => i.classList.add('updating'));
+    document.querySelectorAll('.sensor-item').forEach(i => i.classList.add('updating'));
 
     fetch('/api')
       .then(r => r.json())
       .then(data => {
-        if (!data || data.length === 0) return;
-        const s = data[0]; // neuester Eintrag
-
-        document.getElementById('val-temp').textContent     = s.temperature + '°C';
-        document.getElementById('val-humidity').textContent = s.humidity + '%';
-        document.getElementById('val-air').textContent      = s.air_quality;
-        document.getElementById('val-air-raw').textContent  = s.air_quality_raw;
-        document.getElementById('val-uv').textContent       = s.uv_index;
+        if (!data || data.length === 0) {
+          document.getElementById('sensor-timestamp').textContent = 'Noch keine Daten empfangen';
+          document.querySelectorAll('.sensor-item').forEach(i => i.classList.remove('updating'));
+          return;
+        }
+        const s = data[0];
+        document.getElementById('val-temp').textContent      = s.temperature + '°C';
+        document.getElementById('val-humidity').textContent  = s.humidity + '%';
+        document.getElementById('val-air').textContent       = s.air_quality;
+        document.getElementById('val-air-raw').textContent   = s.air_quality_raw;
+        document.getElementById('val-uv').textContent        = s.uv_index;
         document.getElementById('sensor-timestamp').textContent = s.timestamp;
-
-        items.forEach(i => i.classList.remove('updating'));
+        document.querySelectorAll('.sensor-item').forEach(i => i.classList.remove('updating'));
       })
       .catch(() => {
-        items.forEach(i => i.classList.remove('updating'));
+        document.getElementById('sensor-timestamp').textContent = 'Fehler beim Laden';
+        document.querySelectorAll('.sensor-item').forEach(i => i.classList.remove('updating'));
       });
   }
 
-  // Sofort laden, dann alle 10 Sekunden
   updateSensor();
   setInterval(updateSensor, 10000);
 </script>
