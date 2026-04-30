@@ -80,7 +80,6 @@
            background: var(--green); margin-right: 6px; animation: pulse 2s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-    /* ── Abschnitt Labels ── */
     .section-badge {
       display: inline-flex; align-items: center; gap: 10px;
       font-family: 'Bebas Neue', sans-serif;
@@ -109,7 +108,6 @@
     .official .badge-dot { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: pulse 2s ease-in-out infinite; }
     .sensor .badge-dot   { background: var(--green);  box-shadow: 0 0 8px var(--green);  animation: pulse 2s ease-in-out infinite; }
 
-    /* ── Offizielle Wetterkarte ── */
     .current-card {
       background: var(--card-bg); backdrop-filter: blur(16px);
       border: 1px solid rgba(232,160,32,.15); border-radius: 20px;
@@ -142,7 +140,6 @@
     }
     .stat-chip strong { color: var(--white); font-weight: 500; }
 
-    /* ── Sensor Karte ── */
     .sensor-card {
       background: var(--card-bg); backdrop-filter: blur(16px);
       border: 1px solid rgba(61,220,132,.15); border-radius: 20px;
@@ -215,6 +212,7 @@
       font-family: 'DM Mono', monospace; font-size: .62rem; color: var(--fog);
       margin-top: 8px; display: flex; flex-direction: column; gap: 2px;
     }
+
     footer {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 3;
       padding: 14px 24px;
@@ -225,6 +223,15 @@
     }
     footer a { color: var(--fog); text-decoration: none; }
     footer a:hover { color: var(--mist); }
+    .footer-credits {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      font-size: .65rem;
+    }
+    .footer-credits strong { color: var(--amber); }
+
     @media (max-width: 480px) {
       .page { padding: 28px 16px 100px; }
       header { flex-direction: column; align-items: flex-start; gap: 12px; }
@@ -255,7 +262,6 @@
   <div class="error-box">⚠ Offizielle Wetterdaten konnten nicht geladen werden.<br><small>{{ error }}</small></div>
   {% elif current %}
 
-  <!-- ── Offizielle Wetterdaten ── -->
   <div class="section-badge official">
     <span class="badge-dot"></span>
     Offizielle Wetterdaten
@@ -273,10 +279,8 @@
       <div class="stat-chip">🌧️ Niederschlag <strong>{{ current.precip }} mm</strong></div>
     </div>
   </div>
-
   {% endif %}
 
-  <!-- ── CHC Sensor Daten ── -->
   <div class="section-badge sensor">
     <span class="badge-dot"></span>
     Wetterbedingungen CHC
@@ -332,7 +336,10 @@
 
 <footer>
   <span>📍 Am Hannoverschen Bahnhof 21 · 20457 Hamburg</span>
-  <span>Quelle: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></span>
+  <div class="footer-credits">
+    <span>⚡ Made and Powered by <strong>Lawend</strong></span>
+    <span>🌦️ Weather Station by <strong>Janno & Noah</strong></span>
+  </div>
 </footer>
 
 <script>
@@ -348,11 +355,11 @@
           return;
         }
         const s = data[0];
-        document.getElementById('val-temp').textContent      = s.temperature + '°C';
-        document.getElementById('val-humidity').textContent  = s.humidity + '%';
-        document.getElementById('val-air').textContent       = s.air_quality;
-        document.getElementById('val-air-raw').textContent   = s.air_quality_raw;
-        document.getElementById('val-uv').textContent        = s.uv_index;
+        document.getElementById('val-temp').textContent     = s.temperature + '°C';
+        document.getElementById('val-humidity').textContent = s.humidity + '%';
+        document.getElementById('val-air').textContent      = s.air_quality;
+        document.getElementById('val-air-raw').textContent  = s.air_quality_raw;
+        document.getElementById('val-uv').textContent       = s.uv_index;
         document.getElementById('sensor-timestamp').textContent = s.timestamp;
         document.querySelectorAll('.sensor-item').forEach(i => i.classList.remove('updating'));
       })
